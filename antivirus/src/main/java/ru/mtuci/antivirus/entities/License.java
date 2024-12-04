@@ -1,120 +1,127 @@
 package ru.mtuci.antivirus.entities;
 
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "licenses")
 public class License {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private int id;
+    private Long id;
 
-    @Column(name = "license_code")
+    @Column(name = "code")
     private String code;
 
-    @Column(name = "activation_date")
-    private Date activationDate;
-
-    @Column(name = "expiration_date")
-    private Date expirationDate;
-
-    @Column(name = "is_blocked")
-    private boolean isBlocked;
-
-    @Column(name = "identifier")
-    private String identifier;
-
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
-    @OneToOne
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "product_id")
+    @JsonBackReference
     private Product product;
 
-    @OneToOne
-    @JoinColumn(name = "type_id", referencedColumnName = "id")
-    private LicenseType licenseType;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "type_id")
+    @JsonBackReference
+    private LicenseType type;
 
-    public License(Product product, User user, String identifier, boolean isBlocked, Date expirationDate, Date activationDate, String code) {
-        this.product = product;
-        this.user = user;
-        this.identifier = identifier;
-        this.isBlocked = isBlocked;
-        this.expirationDate = expirationDate;
-        this.activationDate = activationDate;
+    @Column(name = "first_activation_date")
+    private Date firstActivationDate;
+
+    @Column(name = "ending_date")
+    private Date endingDate;
+
+    @Column(name = "is_blocked")
+    private Boolean isBlocked;
+
+    @Column(name = "devices_count")
+    private int devicesCount;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "owner_id")
+    @JsonBackReference
+    private User owner;
+
+    @Column(name = "duration")
+    private int duration;
+
+    @Column(name = "description")
+    private String description;
+
+    @OneToMany(mappedBy = "license", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeviceLicense> deviceLicenses;
+
+    @OneToMany(mappedBy = "license", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<LicenseHistory> licenseHistories;
+
+    public License(Long id, String code, User user, Product product, LicenseType type, Date firstActivationDate, Date endingDate, Boolean isBlocked, int devicesCount, User owner, int duration, String description) {
+        this.id = id;
         this.code = code;
+        this.user = user;
+        this.product = product;
+        this.type = type;
+        this.firstActivationDate = firstActivationDate;
+        this.endingDate = endingDate;
+        this.isBlocked = isBlocked;
+        this.devicesCount = devicesCount;
+        this.owner = owner;
+        this.duration = duration;
+        this.description = description;
+    }
+
+    public License(String code, User user, Product product, LicenseType type, Date firstActivationDate, Date endingDate, Boolean isBlocked, int devicesCount, User owner, int duration, String description) {
+        this.code = code;
+        this.user = user;
+        this.product = product;
+        this.type = type;
+        this.firstActivationDate = firstActivationDate;
+        this.endingDate = endingDate;
+        this.isBlocked = isBlocked;
+        this.devicesCount = devicesCount;
+        this.owner = owner;
+        this.duration = duration;
+        this.description = description;
     }
 
     public License() {
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public Date getActivationDate() {
-        return activationDate;
-    }
-
-    public void setActivationDate(Date activationDate) {
-        this.activationDate = activationDate;
-    }
-
-    public Date getExpirationDate() {
-        return expirationDate;
-    }
-
-    public void setExpirationDate(Date expirationDate) {
-        this.expirationDate = expirationDate;
-    }
-
-    public boolean isBlocked() {
-        return isBlocked;
-    }
-
-    public void setBlocked(boolean blocked) {
-        isBlocked = blocked;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
+    public String getBody(){
+        return String.format("License:\n" +
+                "Code: %s\n" +
+                "User: %s\n" +
+                "Product: %s\n" +
+                "Type: %s\n" +
+                "First activation date: %s\n" +
+                "Ending date: %s\n" +
+                "Is blocked: %b\n" +
+                "Devices count: %d\n" +
+                "Owner: %s\n" +
+                "Duration: %d\n" +
+                "Description: %s\n",
+                this.getCode(),
+                this.getUser().getLogin(),
+                this.getProduct().getName(),
+                this.getType().getName(),
+                this.getFirstActivationDate(),
+                this.getEndingDate(),
+                this.getIsBlocked(),
+                this.getDevicesCount(),
+                this.getOwner().getLogin(),
+                this.getDuration(),
+                this.getDescription());
     }
 }

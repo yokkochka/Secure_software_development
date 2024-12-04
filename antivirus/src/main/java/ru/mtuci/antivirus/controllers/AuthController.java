@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.mtuci.antivirus.entities.DTO.UserDTO;
+import ru.mtuci.antivirus.entities.DTO.UserLoginDTO;
+import ru.mtuci.antivirus.entities.DTO.UserRegisterDTO;
 import ru.mtuci.antivirus.entities.ENUMS.ROLE;
 import ru.mtuci.antivirus.entities.User;
 import ru.mtuci.antivirus.services.UserService;
@@ -32,43 +33,45 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> userRegistration(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> userRegistration(@Valid @RequestBody UserRegisterDTO userDTO, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("Ошибка валидации: " + bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().body("Validation error: " + bindingResult.getAllErrors());
         }
 
-        User user = new User(userDTO.getLogin(), passwordEncoder.encode(userDTO.getPassword()), ROLE.USER, null);
+        if(userService.existsByLogin(userDTO.getLogin())){
+            return ResponseEntity.badRequest().body("Validation error:  User with this login already exists");
+        }
 
+        if(userService.existsByEmail(userDTO.getEmail())){
+            return ResponseEntity.badRequest().body("Validation error:  User with this email already exists");
+        }
+
+        User user = new User(userDTO.getLogin(), passwordEncoder.encode(userDTO.getPassword()), userDTO.getEmail(), ROLE.ROLE_USER, null);
         userService.saveUser(user);
 
         UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
         String token = jwtUtil.generateToken(userDetails);
 
-
-        return ResponseEntity.ok("Регистрация завершена, JWT: " + token);
+        return ResponseEntity.ok("Registration completed, JWT: Bearer " + token);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> userLogin(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
+    public ResponseEntity<?> userLogin(@Valid @RequestBody UserLoginDTO userDTO, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("Ошибка валидации: " + bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().body("Validation error: " + bindingResult.getAllErrors());
         }
 
         User user = userService.findUserByLogin(userDTO.getLogin());
 
-        // If login not exist
         if(user == null){
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body("Validation error: User not found");
         }
 
-        // If password didnt match
         if(!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())){
             return ResponseEntity.status(401).build();
         }
 
         String token = jwtUtil.generateToken(userService.loadUserByUsername(user.getUsername()));
-        return ResponseEntity.ok("Аутентификация завершена, JWT: " + token);
-
-
+        return ResponseEntity.ok("Login completed, JWT: Bearer " + token);
     }
 }

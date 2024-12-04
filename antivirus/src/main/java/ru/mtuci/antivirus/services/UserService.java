@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import ru.mtuci.antivirus.entities.User;
 import ru.mtuci.antivirus.repositories.UserRepository;
 
+import java.util.List;
+
 @Service
 public class UserService implements UserDetailsService {
 
@@ -18,7 +20,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByLogin(username);
+        return userRepository.findUserByLogin(username);
     }
 
     public void saveUser(User user){
@@ -26,6 +28,30 @@ public class UserService implements UserDetailsService {
     }
 
     public User findUserByLogin(String login){
-        return userRepository.findByLogin(login);
+        return userRepository.findUserByLogin(login);
+    }
+
+    public User getUserById(Long id){
+        return userRepository.getUserById(id);
+    }
+
+    public List<User> getAllUsers(){
+        return userRepository.findAll();
+    }
+
+    public void deleteUser(Long id){
+        userRepository.deleteById(id);
+    }
+
+    public User findUserByEmail(String email){
+        return userRepository.findUserByEmail(email);
+    }
+
+    public boolean existsByLogin(String login) {
+        return userRepository.existsByLogin(login);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 }

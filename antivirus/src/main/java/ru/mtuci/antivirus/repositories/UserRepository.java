@@ -4,8 +4,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.mtuci.antivirus.entities.User;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Integer> {
+import java.util.List;
 
-    User findByLogin(String login);
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findUserByLogin(String login);
+    User getUserById(Long id);
+    User findUserByEmail(String email);
+    boolean existsByLogin(String login);
+    boolean existsByEmail(String email);
 }
