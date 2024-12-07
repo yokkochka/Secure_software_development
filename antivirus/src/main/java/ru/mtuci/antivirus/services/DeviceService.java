@@ -24,7 +24,7 @@ public class DeviceService {
     }
 
     public Device registerOrUpdateDevice(ActivationRequest activationRequest, User user) {
-
+        // TODO: добавить связь между девайсом и лицнзией
         Device device = deviceRepository.getDeviceByMacAddress(activationRequest.getMacAddress());
         if (device == null) {
             device = new Device();
@@ -43,6 +43,10 @@ public class DeviceService {
         return deviceRepository.findDeviceByMacAddressAndUser(macAddress, user);
     }
 
+    public Device getDeviceById(Long id) {
+        return deviceRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Device not found"));
+    }
+
     public Device createDevice(DeviceRequest deviceRequest) {
         User user = userRepository.findById(deviceRequest.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -53,9 +57,6 @@ public class DeviceService {
         return deviceRepository.save(device);
     }
 
-    public Device getDeviceById(Long id) {
-        return deviceRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Device not found"));
-    }
 
     public Device updateDevice(Long id, DeviceRequest deviceRequest) {
         Device device = getDeviceById(id);

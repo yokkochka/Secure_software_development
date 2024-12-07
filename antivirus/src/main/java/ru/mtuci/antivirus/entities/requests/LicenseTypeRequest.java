@@ -16,6 +16,4 @@ public class LicenseTypeRequest {
     private int defaultDuration;
 
     private String description;
-
-
 }

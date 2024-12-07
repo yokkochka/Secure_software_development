@@ -45,8 +45,8 @@ public class LicenseService {
             throw new IllegalArgumentException("Product not found");
         }
 
-        User user = userService.getUserById(licenseRequest.getOwnerId());
-        if (user == null) {
+        User owner = userService.getUserById(licenseRequest.getOwnerId());
+        if (owner == null) {
             throw new IllegalArgumentException("User not found");
         }
 
@@ -57,22 +57,25 @@ public class LicenseService {
 
         String code = generateLicenseCode(licenseRequest);
 
+//        User adminUser = userService.findUserByLogin("yokko");
+
+
         License license = new License();
         license.setCode(code);
-        license.setUser(user);
+        license.setUser(null);
         license.setProduct(product);
         license.setType(licenseType);
         license.setFirstActivationDate(null);
         license.setEndingDate(null);
         license.setIsBlocked(false);
         license.setDevicesCount(licenseRequest.getDeviceCount());
-        license.setOwner(user);
+        license.setOwner(owner);
         license.setDuration(licenseRequest.getDuration());
         license.setDescription(licenseRequest.getDescription());
         license.setProduct(product);
         licenseRepository.save(license);
 
-        LicenseHistory licenseHistory = new LicenseHistory(license, user, "CREATED", new Date(), "License created");
+        LicenseHistory licenseHistory = new LicenseHistory(license, owner, "CREATED", new Date(), "License created");
         licenseHistoryService.saveLicenseHistory(licenseHistory);
 
         return license;
@@ -86,11 +89,22 @@ public class LicenseService {
         }
 
         User user = userService.findUserByLogin(login);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found");
-        }
 
         validateActivation(license, device, login);
+
+       if (license.getFirstActivationDate() == null) {
+            license.setFirstActivationDate(new Date());
+            license.setUser(user);
+            license.setEndingDate(new Date(System.currentTimeMillis() + license.getDuration()));
+            licenseRepository.save(license);
+       }else {
+           if (!license.getUser().equals(user)){
+               throw new IllegalArgumentException("Could not activate license: user is not owner");
+           }
+           if (license.getDevicesCount() <= deviceLicenseService.getDeviceLicensesByLicense(license).size()) {
+               throw new IllegalArgumentException("Could not activate license: device count exceeded");
+           }
+       }
 
         createDeviceLicense(license, device);
 
@@ -122,9 +136,13 @@ public class LicenseService {
         return license;
     }
 
-    public Ticket updateExistentLicense(String licenseCode, String login) {
+    public Ticket updateExistentLicense(String licenseCode, String login, String macAddress) {
 
         License license = licenseRepository.getLicensesByCode(licenseCode);
+        if (!license.getUser().getLogin().equals(login)){
+            throw new IllegalArgumentException("Could not activate license: user is not owner");
+        }
+
         if (license == null) {
             throw new IllegalArgumentException("License not found");
         }
@@ -143,7 +161,7 @@ public class LicenseService {
         LicenseHistory licenseHistory = new LicenseHistory(license, license.getOwner(), "UPDATED", new Date(), "License updated");
         licenseHistoryService.saveLicenseHistory(licenseHistory);
 
-        return generateTicket(license, deviceRepository.findDeviceByUser(userService.findUserByLogin(login)));
+        return generateTicket(license, deviceRepository.findDeviceByMacAddress(macAddress));
     }
 
     public Ticket generateTicket(License license, Device device) {
@@ -173,14 +191,11 @@ public class LicenseService {
             }
         }
 
-        if (license.getFirstActivationDate() != null) {
-            throw new IllegalArgumentException("Could not activate license: license is already activated");
-        }
-
         if (license.getDevicesCount() <= deviceLicenseService.getDeviceLicensesByLicense(license).size()) {
             throw new IllegalArgumentException("Could not activate license: device count exceeded");
         }
     }
+
 
     private void createDeviceLicense(License license, Device device) {
         DeviceLicense deviceLicense = new DeviceLicense();

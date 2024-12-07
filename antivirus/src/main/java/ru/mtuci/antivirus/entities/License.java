@@ -113,7 +113,7 @@ public class License {
                 "Duration: %d\n" +
                 "Description: %s\n",
                 this.getCode(),
-                this.getUser().getLogin(),
+                this.getUser() != null && this.getUser().getLogin() != null ? this.getUser().getLogin() : null,
                 this.getProduct().getName(),
                 this.getType().getName(),
                 this.getFirstActivationDate(),
@@ -125,3 +125,8 @@ public class License {
                 this.getDescription());
     }
 }
+
+
+
+
+//Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjpbIlJPTEVfQURNSU4iXSwic3ViIjoieW9ra28iLCJpYXQiOjE3MzM1ODU4MjIsImV4cCI6MTczMzU4OTQyMn0.fBy3hHjPlu2_uVL7LcYIHFmd8CQFoZ8fSfwj0rLVQftksjlD0hKIqDDePhEVgJbM

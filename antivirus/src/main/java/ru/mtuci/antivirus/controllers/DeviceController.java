@@ -24,7 +24,7 @@ public class DeviceController {
         this.deviceService = deviceService;
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createDevice(@Valid @RequestBody DeviceRequest deviceRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
@@ -54,7 +54,7 @@ public class DeviceController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<Device>> getAllDevices() {
         List<Device> devices = deviceService.getAllDevices();
         return ResponseEntity.ok(devices);

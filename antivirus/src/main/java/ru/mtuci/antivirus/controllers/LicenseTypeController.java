@@ -24,7 +24,7 @@ public class LicenseTypeController {
         this.licenseTypeService = licenseTypeService;
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createLicenseType(@Valid @RequestBody LicenseTypeRequest licenseTypeRequest, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
@@ -54,7 +54,7 @@ public class LicenseTypeController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<List<LicenseType>> getAllLicenseTypes() {
         List<LicenseType> licenseTypes = licenseTypeService.getAllLicenseTypes();
         return ResponseEntity.ok(licenseTypes);

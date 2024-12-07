@@ -29,7 +29,7 @@ public class LicenseUpdateController {
     public ResponseEntity<?> updateLicense(@Valid @RequestBody LicenseUpdateRequest updateRequest){
         try {
 
-            Ticket ticket = licenseService.updateExistentLicense(updateRequest.getLicenseCode(), updateRequest.getLogin());
+            Ticket ticket = licenseService.updateExistentLicense(updateRequest.getLicenseCode(), updateRequest.getLogin(), updateRequest.getMacAddress());
 
             return ResponseEntity.ok("License update successful, Ticket:\n" + ticket.getBody());
         } catch (IllegalArgumentException e){
