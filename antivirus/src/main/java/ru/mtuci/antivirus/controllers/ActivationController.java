@@ -53,7 +53,7 @@ public class ActivationController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
         } catch (Exception e) {
-//            e.printStackTrace();
+            e.printStackTrace();
             return ResponseEntity.status(500).body("Internal server error: " + e.getMessage());
         }
 
