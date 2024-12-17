@@ -11,6 +11,8 @@ import ru.mtuci.antivirus.entities.requests.ActivationRequest;
 import ru.mtuci.antivirus.entities.*;
 import ru.mtuci.antivirus.services.*;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/license")
 public class ActivationController {
@@ -28,13 +30,14 @@ public class ActivationController {
 
     @PostMapping("/activate")
     public ResponseEntity<?> activateLicense(@Valid @RequestBody ActivationRequest activationRequest, BindingResult bindingResult) {
-
         if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body("Validation error: " + bindingResult.getAllErrors());
+            String msg = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
+            return ResponseEntity.status(400).body("Validation error: " + msg);
         }
 
         try {
 
+            // Get authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(401).body("Validation error: User is not authenticated");
@@ -42,18 +45,19 @@ public class ActivationController {
 
             User user = userService.findUserByLogin(authentication.getName());
 
+            // Register or update device
             Device device = deviceService.registerOrUpdateDevice(activationRequest, user);
 
+            // Activate license
             String activationCode = activationRequest.getActivationCode();
             String login = user.getLogin();
             Ticket ticket = licenseService.activateLicense(activationCode, device, login);
 
-            return ResponseEntity.ok("License activated successfully. Ticket:\n" + ticket.getBody());
+            return ResponseEntity.status(200).body("License activated. " + ticket.toString());
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
+            return ResponseEntity.status(400).body("Validation error: " + e.getMessage());
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(500).body("Internal server error: " + e.getMessage());
         }
 

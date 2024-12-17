@@ -30,11 +30,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         try{
             String token = resolveToken(request);
 
-            if(token != null && jwtUtil.validateToken(token)){
+            if(token != null && jwtUtil.validateToken(token)){ /// If token is valid
                 String username = jwtUtil.extractLogin(token);
 
                 if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
                     UserDetails userDetails = userService.findUserByLogin(username);
+                    // System.out.println("JwtRequestFilter: doFilterInternal: Someone entered filter, login: " + userDetails.getUsername());
                     SecurityContextHolder.getContext().setAuthentication(jwtUtil.getAuthentication(token, userDetails));
                 }
             }
@@ -43,8 +44,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+        // System.out.println("JwtRequestFilter: doFilterInternal: Someone passed filter");
     }
 
+    // Resolve token used in the request to cut off the "Bearer " part
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {

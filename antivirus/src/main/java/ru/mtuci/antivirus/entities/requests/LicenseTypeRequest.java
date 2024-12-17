@@ -9,11 +9,12 @@ import lombok.Setter;
 @Setter
 public class LicenseTypeRequest {
 
-    @NotBlank
+    @NotBlank(message = "Name cannot be empty")
     private String name;
 
     @NotNull
     private int defaultDuration;
 
+    @NotBlank(message = "Description cannot be empty")
     private String description;
 }

@@ -64,9 +64,12 @@ public class UserController {
 
             userService.saveUser(currentUser);
 
-            return ResponseEntity.status(200).body("User" + currentUser.getLogin() + " updated");
+            return ResponseEntity.status(200).body("User " + currentUser.getLogin() + " updated");
 
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e){
+            return ResponseEntity.status(400).body("Validation error: " + e.getMessage());
+        }
+        catch (Exception e) {
             return ResponseEntity.status(500).body("Internal server error: " + e.getMessage());
         }
     }
@@ -77,7 +80,6 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id){
         try{
             User user = userService.getUserById(id);
-
             userService.deleteUser(id);
             return ResponseEntity.status(200).body("User with id: " + id + " deleted");
         } catch (Exception e){
