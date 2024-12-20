@@ -22,6 +22,8 @@ public class LicenseTypeService {
         return licenseTypeRepository.getLicenseTypeById(licenseTypeId);
     }
 
+    /// CRUD operations
+
     public LicenseType createLicenseType(LicenseTypeRequest licenseTypeRequest) {
         LicenseType licenseType = new LicenseType();
         licenseType.setName(licenseTypeRequest.getName());

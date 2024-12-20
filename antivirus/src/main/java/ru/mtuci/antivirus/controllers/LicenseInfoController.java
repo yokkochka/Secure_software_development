@@ -80,6 +80,7 @@ public class LicenseInfoController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();     // TODO: 1 убрано здесь
             User user = userService.findUserByLogin(authentication.getName());
 
+            // Looking for the device
             Device device = deviceService.getDeviceByInfo(macAddress, user);
 
             if(device == null){
@@ -90,8 +91,10 @@ public class LicenseInfoController {
                 throw new IllegalArgumentException("Device not found");
             }
 
+            // Getting license using mac address and code
             License activeLicense = licenseService.getActiveLicenseForDevice(device, user); // TODO: 2 изменена логика внутри метода
 
+            // Generating ticket
             Ticket ticket = licenseService.generateTicket(activeLicense, device);
 
             return ResponseEntity.status(200).body("Licenses found. " + ticket.toString());

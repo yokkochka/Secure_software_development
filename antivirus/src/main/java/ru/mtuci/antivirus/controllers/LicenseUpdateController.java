@@ -15,6 +15,8 @@ import ru.mtuci.antivirus.services.LicenseService;
 
 import java.util.Objects;
 
+//TODO: 1. Убрать лишние проверки ✅
+
 @RestController
 @RequestMapping("/license")
 public class LicenseUpdateController {
@@ -33,10 +35,11 @@ public class LicenseUpdateController {
             return ResponseEntity.status(400).body("Validation error: " + msg);
         }
 
-        try {
+        try { // TODO: 1 убрана лишняя проверка аутентификации
 
             Ticket ticket = licenseService.updateExistentLicense(updateRequest.getLicenseCode(), updateRequest.getLogin(), updateRequest.getMacAddress());
 
+            /// Я не помню зачем это, но лучше не убирать а то вдруг понадобится | 03.12.24
             // if (ticket.getIsBlocked()) {
             //     return ResponseEntity.status(400).body("License update unavailable: " + ticket.getSignature());
             // }

@@ -38,10 +38,12 @@ public class AuthController {
             return ResponseEntity.status(400).body("Validation error: " + msg);
         }
 
+        // Check if user with this login already exists
         if (userService.existsByLogin(userDTO.getLogin())) {
             return ResponseEntity.status(400).body("Validation error: User with this login already exists");
         }
 
+        // Check if user with this email already exists
         if (userService.existsByEmail(userDTO.getEmail())) {
             return ResponseEntity.status(400).body("Validation error: User with this email already exists");
         }
@@ -64,10 +66,12 @@ public class AuthController {
 
         User user = userService.findUserByLogin(userDTO.getLogin());
 
+        // If login not exist
         if (user == null) {
             return ResponseEntity.status(400).body("Validation error: User with this login not found");
         }
 
+        // If password didnt match
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
             return ResponseEntity.status(400).body("Validation error: Password is incorrect");
         }

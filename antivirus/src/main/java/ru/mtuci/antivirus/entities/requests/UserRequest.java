@@ -19,4 +19,13 @@ public class UserRequest {
 
     @NotBlank(message = "Email cannot be empty")
     private String email;
+
+    @Override
+    public String toString() {
+        return "UserRequest{" +
+                "login='" + login + '\'' +
+                ", passwordHash='" + passwordHash + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

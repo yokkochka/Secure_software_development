@@ -22,6 +22,8 @@ public class ProductService {
         return productRepository.getProductsById(productId);
     }
 
+    /// CRUD operations
+
     public Product createProduct(ProductRequest productRequest) {
         Product product = new Product();
         product.setName(productRequest.getName());

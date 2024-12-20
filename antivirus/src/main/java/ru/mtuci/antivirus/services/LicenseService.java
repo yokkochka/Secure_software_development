@@ -14,6 +14,10 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 
+//TODO: 1. Добавить ЭЦП к тикету на основе полей ✅
+//TODO: 2. Пересмотреть логику validateActivation ✅ && updateLicense ✅
+//TODO: 3.  validateActivation проверять дату первой активации по другому, чтобы работало на неск. ус-в
+
 @Service
 public class LicenseService{
 
@@ -38,8 +42,11 @@ public class LicenseService{
         this.passwordEncoder = passwordEncoder;
     }
 
+
+    /// License creation
     public License createLicense(LicenseRequest licenseRequest) {
 
+        // Trying to get product, user and license type by id
         Product product = productService.getProductById(licenseRequest.getProductId());
         if(product == null){
             throw new IllegalArgumentException("Product not found");
@@ -55,31 +62,36 @@ public class LicenseService{
             throw new IllegalArgumentException("License type not found");
         }
 
+        // Generate license code
         String code = generateLicenseCode(licenseRequest);
 
+        // Create license and saving
         License license = new License();
         license.setCode(code);
-        license.setUser(null);
+        license.setUser(null); //
         license.setProduct(product);
         license.setType(licenseType);
         license.setFirstActivationDate(null);
         license.setEndingDate(null);
         license.setIsBlocked(false);
         license.setDevicesCount(licenseRequest.getDeviceCount());
-        license.setOwner(user);
+        license.setOwner(user); // Владелец лицензии
         license.setDuration(licenseRequest.getDuration());
         license.setDescription(licenseRequest.getDescription());
         license.setProduct(product);
         licenseRepository.save(license);
 
+        // Save license history
         LicenseHistory licenseHistory = new LicenseHistory(license, user, "CREATED", new Date(), "License created");
         licenseHistoryService.saveLicenseHistory(licenseHistory);
 
         return license;
     }
 
+    /// License activation
     public Ticket activateLicense(String activationCode, Device device, String login) {
 
+        // Trying to get license by activation code
         License license = licenseRepository.getLicensesByCode(activationCode);
         if(license == null){
             throw new IllegalArgumentException("License not found");
@@ -97,22 +109,29 @@ public class LicenseService{
             }
         }
 
+        // Validate license
         validateActivation(license, device, login);
 
+        // Update license
         if(license.getFirstActivationDate() == null){
-            updateLicenseForActivation(license, user);
+            updateLicenseForActivation(license, user); // TODO: 2 добавлена замена id владельца лицензии
         }
 
+        // Create device license
         createDeviceLicense(license, device);
 
+
+        // Save license history
         LicenseHistory licenseHistory = new LicenseHistory(license, license.getOwner(), "ACTIVATED", new Date(), "License activated");
         licenseHistoryService.saveLicenseHistory(licenseHistory);
 
+        // Generate ticket
         return generateTicket(license, device);
     }
 
+    /// License finding for the device
     public License getActiveLicenseForDevice(Device device, User user/*, String code*/) {
-        DeviceLicense deviceLicense = deviceLicenseService.getDeviceLicenseByDeviceAndIsNotBlocked(device);
+        DeviceLicense deviceLicense = deviceLicenseService.getDeviceLicenseByDeviceAndIsNotBlocked(device); // && !isblockedlicense
 
         if(deviceLicense == null){
             throw new IllegalArgumentException("License for this device not found or blocked");
@@ -127,13 +146,19 @@ public class LicenseService{
         return deviceLicense.getLicense();
     }
 
+    /// License updating
+
     public Ticket updateExistentLicense(String licenseCode, String login, String macAddress){
 
+        // TODO refactor throws to failure tickets (if rly needed wtf)
+
+        // Find license
         License license = licenseRepository.getLicensesByCode(licenseCode);
         if(license == null){
             throw new IllegalArgumentException("License not found");
         }
 
+        // Validate license
         if(license.getIsBlocked()){
             throw new IllegalArgumentException("License is blocked");
         }
@@ -142,20 +167,26 @@ public class LicenseService{
             throw new IllegalArgumentException("License is not activated");
         }
 
+        // Update license date
         license.setEndingDate(new Date(license.getEndingDate().getTime() + license.getDuration()));
         licenseRepository.save(license);
 
+        // Save license history
         LicenseHistory licenseHistory = new LicenseHistory(license, license.getOwner(), "UPDATED", new Date(), "License updated");
         licenseHistoryService.saveLicenseHistory(licenseHistory);
 
+        // Generate ticket
         return generateTicket(license, deviceRepository.findDeviceByMacAddress(macAddress));
     }
+
+
+    // Other methods
 
     public Ticket generateTicket(License license, Device device){
         Ticket ticket = new Ticket();
 
         ticket.setCurrentDate(new Date());
-        ticket.setLifetime(license.getDuration());
+        ticket.setLifetime(license.getDuration()); // Ticket life time, should be decreased to const int
         ticket.setActivationDate(new Date(license.getFirstActivationDate().getTime()));
         ticket.setExpirationDate(new Date(license.getEndingDate().getTime()));
         ticket.setUserId(license.getOwner().getId());
@@ -168,16 +199,19 @@ public class LicenseService{
 
     private void validateActivation(License license, Device device, String login) {
 
+        // Is license blocked
         if (license.getIsBlocked()) {
             throw new IllegalArgumentException("License is blocked");
         }
 
+        // Is license expired
         if(license.getEndingDate() != null) {
             if (license.getEndingDate().before(new Date())) {
                 throw new IllegalArgumentException("License is expired");
             }
         }
 
+        // Is device count exceeded
         if (license.getDevicesCount() <= deviceLicenseService.getDeviceLicensesByLicense(license).size()) {
             throw new IllegalArgumentException("Device count exceeded");
         }
@@ -200,7 +234,11 @@ public class LicenseService{
     }
 
     public String generateSignature(Ticket ticket){
-        String signature = passwordEncoder.encode(ticket.getBodyForSigning());
+        String signature = passwordEncoder.encode(ticket.getBodyForSigning()); // TODO: 1 добавлена адекватная подпись через PasswordEncoder
+
+        // String body_ticket = ticket.getBodyForSigning();
+        // System.out.println("Signature matches: " + passwordEncoder.matches(body_ticket, signature));
+
         return signature;
     }
 
@@ -213,6 +251,8 @@ public class LicenseService{
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Error generating license code", e);
         }
+
+        // TODO: implement / refactor license code generation...
     }
 
     public License getLicenseById(Long id) {

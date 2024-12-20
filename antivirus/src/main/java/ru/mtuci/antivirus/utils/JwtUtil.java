@@ -24,9 +24,12 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    /// Hashing secret key
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
+
+    /// Generate token
 
     public String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
@@ -44,9 +47,18 @@ public class JwtUtil {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList())
         );
+        /*
+        claims.put("role", ...) добавляет запись в claims с ключом "role".
+        userDetails.getAuthorities() получает коллекцию полномочий (ролей), предоставленных пользователю.
+        .stream() преобразует коллекцию полномочий в поток.
+        .map(GrantedAuthority::getAuthority) преобразует каждый объект GrantedAuthority в потоке в его строковое представление (имя полномочия/роли).
+        .collect(Collectors.toList()) собирает преобразованные элементы потока в список.
+         */
         return createToken(claims, userDetails.getUsername());
 
     }
+
+    /// Validate token
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
@@ -63,6 +75,8 @@ public class JwtUtil {
             return false;
         }
     }
+
+    /// Extract from token
 
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
