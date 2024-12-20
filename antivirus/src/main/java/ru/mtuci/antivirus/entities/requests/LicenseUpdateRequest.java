@@ -25,3 +25,4 @@ public class LicenseUpdateRequest {
     private String macAddress;
 
 }
+

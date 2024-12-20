@@ -11,8 +11,6 @@ import ru.mtuci.antivirus.repositories.UserRepository;
 
 import java.util.List;
 
-//TODO: 1. Пересмотреть логику обновления пользователя устройства ✅
-
 @Service
 public class DeviceService {
 
@@ -27,7 +25,6 @@ public class DeviceService {
 
     public Device registerOrUpdateDevice(ActivationRequest activationRequest, User user) {
 
-        // Получение устройства по MAC-адресу
         Device device = deviceRepository.getDeviceByMacAddress(activationRequest.getMacAddress());
         if (device == null) {
             device = new Device();
@@ -37,7 +34,6 @@ public class DeviceService {
             throw new IllegalArgumentException("Device already registered by another user");
         }
 
-        // Обновление информации об устройстве
         device.setName(activationRequest.getDeviceName());
 
         return deviceRepository.save(device);
@@ -46,8 +42,6 @@ public class DeviceService {
     public Device getDeviceByInfo(String macAddress, User user) {
         return deviceRepository.findDeviceByMacAddressAndUser(macAddress, user);
     }
-
-    /// CRUD operations
 
     public Device createDevice(DeviceRequest deviceRequest) {
         User user = userRepository.findById(deviceRequest.getUserId())

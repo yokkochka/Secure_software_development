@@ -36,8 +36,6 @@ public class ActivationController {
         }
 
         try {
-
-            // Get authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
                 return ResponseEntity.status(401).body("Validation error: User is not authenticated");
@@ -45,10 +43,9 @@ public class ActivationController {
 
             User user = userService.findUserByLogin(authentication.getName());
 
-            // Register or update device
             Device device = deviceService.registerOrUpdateDevice(activationRequest, user);
 
-            // Activate license
+
             String activationCode = activationRequest.getActivationCode();
             String login = user.getLogin();
             Ticket ticket = licenseService.activateLicense(activationCode, device, login);
